@@ -20,11 +20,16 @@ function isLocalServer() {
   return h === '127.0.0.1' || h === 'localhost' || h === '::1';
 }
 
+function isPlialuArticle(payload) {
+  return payload && typeof payload.article === 'string' && payload.article.startsWith('plialu_');
+}
+
 async function api(url, payload = null) {
-  // Mode serveur Python uniquement en local (127.0.0.1 / localhost / file://).
-  // En hébergement statique (GitHub Pages, etc.) on passe directement
-  // au mode secours côté navigateur.
-  if (isLocalServer()) {
+  // Articles Plialu : calcul/export systématiquement côté navigateur car le
+  // serveur Python ne les connaît pas (ils sont dérivés de lib/database.js).
+  const forceLocal = isPlialuArticle(payload);
+
+  if (!forceLocal && isLocalServer()) {
     try {
       const options = payload ? {
         method: 'POST',
@@ -44,19 +49,19 @@ async function api(url, payload = null) {
     }
   }
 
-  // Mode secours : pas de backend Python (file://, GitHub Pages, fetch KO).
-  // L'interface reste utilisable, calculs et exports DXF/fiche côté navigateur.
+  // Mode secours : pas de backend (file://, GitHub Pages, article Plialu, fetch KO).
+  const cat = state.catalogue || window.CATALOGUE_EMBEDDED;
   if (url === '/api/catalogue') return window.CATALOGUE_EMBEDDED;
-  if (url === '/api/calculate') return calculateLocal(window.CATALOGUE_EMBEDDED, payload);
+  if (url === '/api/calculate') return calculateLocal(cat, payload);
   if (url === '/api/export/dxf') {
-    const result = calculateLocal(window.CATALOGUE_EMBEDDED, payload);
+    const result = calculateLocal(cat, payload);
     const filename = safeFilename(`${payload.values?.rep || result.article_id}_${result.article_id}_${Math.round(result.length_mm || 0)}.dxf`);
     const text = buildDxfText(result);
     const blobUrl = URL.createObjectURL(new Blob([text], { type: 'application/dxf' }));
     return { url: blobUrl, filename };
   }
   if (url === '/api/export/fiche') {
-    const result = calculateLocal(window.CATALOGUE_EMBEDDED, payload);
+    const result = calculateLocal(cat, payload);
     const filename = safeFilename(`fiche_${payload.values?.rep || result.article_id}_${result.article_id}.html`);
     const html = buildFicheHtml(result, payload);
     const blobUrl = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
@@ -108,7 +113,99 @@ function enrichCatalogueWithPlialu(cat) {
 
   cat.materials = [...familyMaterials, ...(cat.materials || [])];
   cat.default_material = familyMaterials[0]?.id || cat.default_material;
+
+  // ── Gammes / articles ──────────────────────────────────────
+  if (Array.isArray(P.FAMILLES) && Array.isArray(P.ARTICLES)) {
+    const profiles = Array.isArray(P.PROFILES) ? P.PROFILES : [];
+    const plialuGammes = P.FAMILLES.map(famille => {
+      const famArts = P.ARTICLES.filter(a => a.famille === famille);
+      if (!famArts.length) return null;
+      const famProfiles = profiles.filter(p => p.famille === famille);
+      return {
+        id: 'plialu_' + slugify(famille),
+        label: famille,
+        description: `Famille Plialu — ${famArts.length} article${famArts.length > 1 ? 's' : ''}`,
+        articles: famArts.map(art => buildArticleFromPlialu(art, pickProfileFor(art, famProfiles))),
+      };
+    }).filter(Boolean);
+
+    cat.gammes = [...plialuGammes, ...(cat.gammes || [])];
+  }
   return cat;
+}
+
+function slugify(s) {
+  return String(s).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+function pliCountFromName(name) {
+  const m = String(name).match(/(\d)\s*plis/i);
+  if (m) return Number(m[1]);
+  if (/biaise/i.test(name)) return 2;
+  return null;
+}
+
+function pickProfileFor(article, famProfiles) {
+  if (!famProfiles.length) return null;
+  const n = pliCountFromName(article.article);
+  if (n != null) {
+    const exact = famProfiles.find(p => p.bends.length === n);
+    if (exact) return exact;
+  }
+  return famProfiles[0];
+}
+
+function buildArticleFromPlialu(art, profile) {
+  const segLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+  let segLabels, bendDefaults, turnSigns, segDefaults;
+
+  if (profile) {
+    segLabels = profile.segments.map(s => s.label);
+    segDefaults = profile.segments.map(s => s.length);
+    bendDefaults = profile.bends.map(b => Math.abs(b.angle));
+    turnSigns = profile.bends.map(b => Math.sign(b.angle) || 1);
+  } else {
+    const pli = pliCountFromName(art.article) || 2;
+    const segCount = pli + 1;
+    segLabels = segLetters.slice(0, segCount);
+    segDefaults = segLabels.map((_, i) => (i === Math.floor(segCount / 2) ? 150 : 30));
+    bendDefaults = Array(pli).fill(90);
+    turnSigns = Array(pli).fill(0).map((_, i) => (i % 2 === 0 ? -1 : 1));
+  }
+
+  const bendIds = bendDefaults.map((_, i) => `pli${segLetters[i]}`);
+  const dimFields = segLabels.map((s, i) => ({
+    id: s, label: s, type: 'number', default: segDefaults[i] || 30, min: 1, step: 1, unit: 'mm',
+  }));
+  dimFields.push({ id: 'Lg', label: 'Lg', type: 'number', default: 3000, min: 50, step: 1, unit: 'mm' });
+  bendDefaults.forEach((d, i) => {
+    dimFields.push({ id: bendIds[i], label: bendIds[i], type: 'number', default: d, min: 1, max: 179, step: 1, unit: '°' });
+  });
+
+  const prefix = (window.Plialu.PREFIXES || {})[art.famille] || '';
+  return {
+    id: `plialu_${art.id}`,
+    label: art.article,
+    title: art.article,
+    reference_prefix: prefix,
+    plialu_id: art.id,
+    schema: [
+      { group: 'Repère', fields: [{ id: 'rep', label: 'Rep', type: 'text', default: prefix || 'Rep' }] },
+      { group: 'Dimensions', fields: dimFields },
+    ],
+    geometry: {
+      segments: segLabels,
+      bends: bendIds,
+      turn_signs: turnSigns,
+      flat_formula: 'segments_plus_bend_allowances',
+      notes: profile
+        ? `Géométrie issue du profil "${profile.name}" — à recalibrer pour cet article spécifique.`
+        : 'Géométrie par défaut — à recalibrer pour cet article (ordre, angles, sens).',
+    },
+    limits: { max_length: 6000, min_flat_width: 20, max_flat_width: 1250 },
+  };
 }
 
 function plialuRefsForCurrent() {
