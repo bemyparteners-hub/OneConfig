@@ -140,6 +140,7 @@ def calculate(catalogue: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
         "article_id": article_id,
         "gamme_id": gamme_id,
         "material": material.get("label", material_id),
+        "material_ref": payload.get("material_ref"),
         "thickness_mm": thickness,
         "quantity": qty,
         "radius_mm": radius,

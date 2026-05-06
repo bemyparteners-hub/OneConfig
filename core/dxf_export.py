@@ -48,7 +48,9 @@ def create_developed_dxf(result: Dict[str, Any], values: Dict[str, Any], out_dir
         dxf.append(_text(length + margin, y - 4, f"{bend['field']} {bend['angle_deg']:.1f} deg", 8, "TEXT"))
 
     dxf.append(_text(0, width + margin, f"{result.get('article_title')} - dev {_fmt(width)} mm - Lg {_fmt(length)} mm", 12, "TEXT"))
-    dxf.append(_text(0, width + margin + 18, f"Matiere {result.get('material')} - ep {result.get('thickness_mm')} - qte {result.get('quantity')}", 10, "TEXT"))
+    ref = result.get('material_ref')
+    ref_txt = f" - ref {ref}" if ref else ''
+    dxf.append(_text(0, width + margin + 18, f"Matiere {result.get('material')}{ref_txt} - ep {result.get('thickness_mm')} - qte {result.get('quantity')}", 10, "TEXT"))
     dxf.append("0\nENDSEC\n0\nEOF\n")
     path.write_text("".join(dxf), encoding="utf-8")
     return path

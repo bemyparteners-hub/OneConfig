@@ -52,6 +52,7 @@ th {{ width: 220px; background: #f4f6f8; }}
 <table>
 {row('Article', result.get('article_title', ''))}
 {row('Matière', result.get('material', ''))}
+{row('Réf. matière', result.get('material_ref') or '—')}
 {row('Épaisseur', f"{result.get('thickness_mm', 0):.2f}", 'mm')}
 {row('Quantité', result.get('quantity', 1))}
 {row('Longueur Lg', f"{result.get('length_mm', 0):.2f}", 'mm')}
