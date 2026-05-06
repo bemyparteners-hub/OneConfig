@@ -595,11 +595,12 @@ function drawBendCallout(ctx, pt, label, idx) {
 }
 
 // Rotation purement visuelle des points du profil pour rendu écran.
-// (x, y) → (y, -x) ⇒ rotation -90° (sens horaire). N'altère pas les
-// données métier : buildPreviewPoints, payload, exports DXF/fiche
-// reçoivent toujours les coords d'origine.
-function rotatePointsClockwise90(points) {
-  return points.map(([x, y]) => [y, -x]);
+// (x, y) → (-y, x) ⇒ rotation +90° (sens anti-horaire) pour que les
+// retours d'un U/Pi pointent vers le bas comme attendu en coupe atelier.
+// N'altère pas les données métier : buildPreviewPoints, payload, exports
+// DXF/fiche reçoivent toujours les coords d'origine.
+function rotatePointsForScreen(points) {
+  return points.map(([x, y]) => [-y, x]);
 }
 
 function drawSectionPreview(r) {
@@ -608,7 +609,7 @@ function drawSectionPreview(r) {
   ctx.fillStyle = '#fbfcfe';
   ctx.fillRect(0, 0, w, h);
 
-  const rawPoints = rotatePointsClockwise90(r.profile_points || [[0, 0], [100, 0]]);
+  const rawPoints = rotatePointsForScreen(r.profile_points || [[0, 0], [100, 0]]);
   const pts = normalizePoints(rawPoints, w, h, Math.min(86, Math.max(54, w * 0.08)));
 
   // Petit cartouche titre, comme une zone de plan.
@@ -702,7 +703,7 @@ function renderArticleSchema() {
 
   const defaultValues = {};
   article.schema.flatMap(g => g.fields).forEach(f => defaultValues[f.id] = f.default);
-  const points = rotatePointsClockwise90(buildPreviewPoints(article, defaultValues));
+  const points = rotatePointsForScreen(buildPreviewPoints(article, defaultValues));
   const pts = normalizePoints(points, w, h, 32);
 
   for (let i = 0; i < pts.length - 1; i++) {
