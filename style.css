@@ -49,10 +49,10 @@ body {
   display: grid;
   gap: 10px;
   grid-template-columns:
-    minmax(260px, 320px)
-    minmax(320px, 460px)
-    minmax(360px, 1fr)
-    minmax(300px, 430px);
+    minmax(260px, 1fr)
+    minmax(320px, 1.3fr)
+    minmax(360px, 1.3fr)
+    minmax(300px, 1.1fr);
   grid-template-rows: auto minmax(430px, 1fr) auto;
   grid-template-areas:
     "affair gamme article params"
@@ -219,7 +219,7 @@ input[type=number] { text-align: right; }
 
 .preview-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: 10px;
   height: 100%;
   min-height: 420px;
