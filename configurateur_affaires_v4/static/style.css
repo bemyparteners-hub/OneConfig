@@ -159,6 +159,25 @@ input[type=number] { text-align: right; }
 .command-list { margin-top: auto; display: flex; flex-direction: column; gap: 6px; word-break: break-word; }
 .command-list a { color: var(--accent); text-decoration: none; }
 
+.folder-nav {
+  margin-top: 10px;
+  border: 1px solid #d8e1ec;
+  border-radius: 4px;
+  padding: 8px;
+  background: #fbfdff;
+}
+.folder-nav-title { font-weight: 600; margin-bottom: 6px; }
+#folderList { margin: 0; padding-left: 18px; max-height: 220px; overflow: auto; font-size: 13px; }
+#folderList ul { margin: 2px 0; padding-left: 16px; list-style: none; border-left: 1px dashed #cfd8e3; }
+#folderList li { margin: 2px 0; list-style: none; }
+#folderList .folder-item > details > summary { cursor: pointer; font-weight: 600; color: #1f3a5f; list-style: none; }
+#folderList .folder-item > details > summary::before { content: '▸ '; display: inline-block; width: 12px; transition: transform 0.15s; }
+#folderList .folder-item > details[open] > summary::before { content: '▾ '; }
+#folderList .file-item { color: var(--muted); padding-left: 14px; position: relative; }
+#folderList .file-item::before { content: '·'; position: absolute; left: 4px; color: #b8c2cf; }
+#folderList .muted { color: var(--muted); list-style: none; }
+
+
 .group-box {
   display: inline-block;
   vertical-align: top;

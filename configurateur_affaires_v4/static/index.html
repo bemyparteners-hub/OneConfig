@@ -20,7 +20,8 @@
           <div class="field-row wide">
             <label>Nom</label>
             <input id="affaireName" type="text" placeholder="Nom affaire / client" />
-            <button class="folder" title="Ouvrir">▣</button>
+            <button class="folder" id="btnPickFolder" title="Ouvrir un dossier">▣</button>
+            <input id="folderPicker" type="file" webkitdirectory directory multiple hidden />
           </div>
           <div class="brand-block">
             <div class="mark"></div>
@@ -62,6 +63,10 @@
         <div class="details-panel">
           <h3 id="detailTitle">—</h3>
           <p id="detailText">Sélectionne une gamme et un article.</p>
+          <div class="folder-nav" id="folderNav">
+            <div class="folder-nav-title">Navigation des fichiers</div>
+            <ul id="folderList" class="tree"><li class="muted">Aucun dossier chargé.</li></ul>
+          </div>
           <div class="command-list" id="exportLinks"></div>
         </div>
       </section>
