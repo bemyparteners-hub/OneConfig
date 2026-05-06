@@ -310,8 +310,56 @@ function refreshThicknesses() {
   $('thicknessSelect').value = String(state.thickness);
 }
 
+function imageForArticle(article) {
+  if (!article || !window.PIECE_IMAGES) return null;
+  const map = window.PIECE_IMAGES.articles || {};
+  // Le label de l'article est conservé tel quel par buildArticleFromPlialu
+  const f = map[article.label] || map[article.title] || map[article.id];
+  return f ? `assets/pieces/${encodeURIComponent(f)}` : null;
+}
+
+function imageForGamme(gamme) {
+  if (!gamme || !window.PIECE_IMAGES) return null;
+  const fams = window.PIECE_IMAGES.familles || {};
+  const arts = window.PIECE_IMAGES.articles || {};
+  if (fams[gamme.label]) return `assets/pieces/${encodeURIComponent(fams[gamme.label])}`;
+  // Fallback : prends la première image disponible parmi les articles de la gamme
+  for (const a of (gamme.articles || [])) {
+    const f = arts[a.label] || arts[a.title];
+    if (f) return `assets/pieces/${encodeURIComponent(f)}`;
+  }
+  return null;
+}
+
 function renderGammeThumbs() {
-  $('gammeThumbs').innerHTML = Array.from({ length: 12 }, (_, i) => `<div class="thumb" title="Modèle ${i + 1}"></div>`).join('');
+  const gamme = findGamme();
+  const articles = gamme?.articles || [];
+  const arts = (window.PIECE_IMAGES && window.PIECE_IMAGES.articles) || {};
+  const slots = articles.slice(0, 12);
+  // Complète à 12 cases pour préserver la grille
+  while (slots.length < 12) slots.push(null);
+  $('gammeThumbs').innerHTML = slots.map((a, i) => {
+    if (!a) return `<div class="thumb empty" title="—"></div>`;
+    const f = arts[a.label] || arts[a.title];
+    const isActive = a.id === state.article ? ' active' : '';
+    if (f) {
+      const url = `assets/pieces/${encodeURIComponent(f)}`;
+      return `<div class="thumb${isActive}" data-article="${a.id}" title="${a.label}"><img src="${url}" alt="${a.label}" loading="lazy"></div>`;
+    }
+    return `<div class="thumb${isActive}" data-article="${a.id}" title="${a.label}"><span class="thumb-label">${a.label}</span></div>`;
+  }).join('');
+
+  // Permet de cliquer sur une vignette pour sélectionner l'article
+  document.querySelectorAll('#gammeThumbs .thumb[data-article]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.getAttribute('data-article');
+      const sel = $('articleSelect');
+      if (sel && Array.from(sel.options).some(o => o.value === id)) {
+        sel.value = id;
+        sel.dispatchEvent(new Event('change'));
+      }
+    });
+  });
 }
 
 function renderDetails() {
@@ -319,6 +367,13 @@ function renderDetails() {
   const article = findArticle();
   $('detailTitle').textContent = article?.title || '—';
   $('detailText').textContent = `${gamme?.description || ''} ${article?.geometry?.notes || ''}`;
+
+  // Vignette de l'article sélectionné dans le panneau Détails
+  const wrap = $('detailImage');
+  if (wrap) {
+    const url = imageForArticle(article);
+    wrap.innerHTML = url ? `<img src="${url}" alt="${article.label}" loading="lazy">` : '';
+  }
 }
 
 function renderForm() {
