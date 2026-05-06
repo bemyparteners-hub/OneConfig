@@ -1,0 +1,525 @@
+window.CATALOGUE_EMBEDDED = {
+  "version": "0.2",
+  "units": "mm",
+  "default_material": "AC75-7032",
+  "materials": [
+    {
+      "id": "AC75-7032",
+      "label": "AC75-7032",
+      "density_kg_m3": 2700,
+      "k_factor": 0.38,
+      "default_radius_factor": 1.0,
+      "thicknesses": [
+        0.75,
+        1.0,
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "id": "AL15-9010M-ARC",
+      "label": "AL15-9010M-ARC",
+      "density_kg_m3": 2700,
+      "k_factor": 0.38,
+      "default_radius_factor": 1.0,
+      "thicknesses": [
+        1.0,
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "id": "ACIER-GALVA",
+      "label": "Acier galva",
+      "density_kg_m3": 7850,
+      "k_factor": 0.42,
+      "default_radius_factor": 1.0,
+      "thicknesses": [
+        0.75,
+        1.0,
+        1.5,
+        2.0,
+        3.0
+      ]
+    },
+    {
+      "id": "INOX",
+      "label": "Inox",
+      "density_kg_m3": 8000,
+      "k_factor": 0.45,
+      "default_radius_factor": 1.2,
+      "thicknesses": [
+        1.0,
+        1.5,
+        2.0,
+        3.0
+      ]
+    }
+  ],
+  "gammes": [
+    {
+      "id": "bavette",
+      "label": "Bavette",
+      "description": "Famille de bavettes pliées, inspirée de votre configurateur actuel.",
+      "articles": [
+        {
+          "id": "bv2",
+          "label": "Bv2",
+          "title": "Bavette 2 plis",
+          "reference_prefix": "Bv",
+          "schema": [
+            {
+              "group": "Repère",
+              "fields": [
+                {
+                  "id": "rep",
+                  "label": "Rep",
+                  "type": "text",
+                  "default": "Bv"
+                }
+              ]
+            },
+            {
+              "group": "Dimensions",
+              "fields": [
+                {
+                  "id": "A",
+                  "label": "A",
+                  "type": "number",
+                  "default": 10,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "B",
+                  "label": "B",
+                  "type": "number",
+                  "default": 30,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "C",
+                  "label": "C",
+                  "type": "number",
+                  "default": 150,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "Lg",
+                  "label": "Lg",
+                  "type": "number",
+                  "default": 3000,
+                  "min": 50,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "pliA",
+                  "label": "pliA",
+                  "type": "number",
+                  "default": 45,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                },
+                {
+                  "id": "pliB",
+                  "label": "pliB",
+                  "type": "number",
+                  "default": 93,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                }
+              ]
+            }
+          ],
+          "geometry": {
+            "segments": [
+              "A",
+              "B",
+              "C"
+            ],
+            "bends": [
+              "pliA",
+              "pliB"
+            ],
+            "turn_signs": [
+              1,
+              -1
+            ],
+            "flat_formula": "segments_plus_bend_allowances",
+            "notes": "Géométrie indicative à recaler selon vos conventions de cotation."
+          },
+          "limits": {
+            "max_length": 6000,
+            "min_flat_width": 20,
+            "max_flat_width": 1250
+          }
+        },
+        {
+          "id": "bv4",
+          "label": "Bv4",
+          "title": "Bavette 4 plis",
+          "reference_prefix": "Bv",
+          "schema": [
+            {
+              "group": "Repère",
+              "fields": [
+                {
+                  "id": "rep",
+                  "label": "Rep",
+                  "type": "text",
+                  "default": "Bv"
+                }
+              ]
+            },
+            {
+              "group": "Dimensions",
+              "fields": [
+                {
+                  "id": "A",
+                  "label": "A",
+                  "type": "number",
+                  "default": 10,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "B",
+                  "label": "B",
+                  "type": "number",
+                  "default": 30,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "C",
+                  "label": "C",
+                  "type": "number",
+                  "default": 150,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "D",
+                  "label": "D",
+                  "type": "number",
+                  "default": 30,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "E1",
+                  "label": "E1",
+                  "type": "number",
+                  "default": 10,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "Lg",
+                  "label": "Lg",
+                  "type": "number",
+                  "default": 3000,
+                  "min": 50,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "pliA",
+                  "label": "pliA",
+                  "type": "number",
+                  "default": 60,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                },
+                {
+                  "id": "pliB",
+                  "label": "pliB",
+                  "type": "number",
+                  "default": 93,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                },
+                {
+                  "id": "pliC",
+                  "label": "pliC",
+                  "type": "number",
+                  "default": 93,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                },
+                {
+                  "id": "pliD",
+                  "label": "pliD",
+                  "type": "number",
+                  "default": 165,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                }
+              ]
+            }
+          ],
+          "geometry": {
+            "segments": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E1"
+            ],
+            "bends": [
+              "pliA",
+              "pliB",
+              "pliC",
+              "pliD"
+            ],
+            "turn_signs": [
+              1,
+              -1,
+              -1,
+              1
+            ],
+            "flat_formula": "segments_plus_bend_allowances",
+            "notes": "Géométrie indicative à recaler selon vos conventions de cotation."
+          },
+          "limits": {
+            "max_length": 6000,
+            "min_flat_width": 20,
+            "max_flat_width": 1250
+          }
+        }
+      ]
+    },
+    {
+      "id": "profils_standards",
+      "label": "Profils standards",
+      "description": "Exemples de profils simples pour développer le catalogue.",
+      "articles": [
+        {
+          "id": "u",
+          "label": "U",
+          "title": "Profil U",
+          "reference_prefix": "U",
+          "schema": [
+            {
+              "group": "Repère",
+              "fields": [
+                {
+                  "id": "rep",
+                  "label": "Rep",
+                  "type": "text",
+                  "default": "U"
+                }
+              ]
+            },
+            {
+              "group": "Dimensions",
+              "fields": [
+                {
+                  "id": "A",
+                  "label": "Aile gauche",
+                  "type": "number",
+                  "default": 40,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "B",
+                  "label": "Fond",
+                  "type": "number",
+                  "default": 100,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "C",
+                  "label": "Aile droite",
+                  "type": "number",
+                  "default": 40,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "Lg",
+                  "label": "Lg",
+                  "type": "number",
+                  "default": 3000,
+                  "min": 50,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "pliA",
+                  "label": "pliA",
+                  "type": "number",
+                  "default": 90,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                },
+                {
+                  "id": "pliB",
+                  "label": "pliB",
+                  "type": "number",
+                  "default": 90,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                }
+              ]
+            }
+          ],
+          "geometry": {
+            "segments": [
+              "A",
+              "B",
+              "C"
+            ],
+            "bends": [
+              "pliA",
+              "pliB"
+            ],
+            "turn_signs": [
+              1,
+              1
+            ],
+            "flat_formula": "segments_plus_bend_allowances"
+          },
+          "limits": {
+            "max_length": 6000,
+            "min_flat_width": 20,
+            "max_flat_width": 1250
+          }
+        },
+        {
+          "id": "z",
+          "label": "Z",
+          "title": "Profil Z",
+          "reference_prefix": "Z",
+          "schema": [
+            {
+              "group": "Repère",
+              "fields": [
+                {
+                  "id": "rep",
+                  "label": "Rep",
+                  "type": "text",
+                  "default": "Z"
+                }
+              ]
+            },
+            {
+              "group": "Dimensions",
+              "fields": [
+                {
+                  "id": "A",
+                  "label": "Aile basse",
+                  "type": "number",
+                  "default": 40,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "B",
+                  "label": "Âme",
+                  "type": "number",
+                  "default": 80,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "C",
+                  "label": "Aile haute",
+                  "type": "number",
+                  "default": 40,
+                  "min": 1,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "Lg",
+                  "label": "Lg",
+                  "type": "number",
+                  "default": 3000,
+                  "min": 50,
+                  "step": 1,
+                  "unit": "mm"
+                },
+                {
+                  "id": "pliA",
+                  "label": "pliA",
+                  "type": "number",
+                  "default": 90,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                },
+                {
+                  "id": "pliB",
+                  "label": "pliB",
+                  "type": "number",
+                  "default": 90,
+                  "min": 1,
+                  "max": 179,
+                  "step": 1,
+                  "unit": "°"
+                }
+              ]
+            }
+          ],
+          "geometry": {
+            "segments": [
+              "A",
+              "B",
+              "C"
+            ],
+            "bends": [
+              "pliA",
+              "pliB"
+            ],
+            "turn_signs": [
+              1,
+              -1
+            ],
+            "flat_formula": "segments_plus_bend_allowances"
+          },
+          "limits": {
+            "max_length": 6000,
+            "min_flat_width": 20,
+            "max_flat_width": 1250
+          }
+        }
+      ]
+    }
+  ]
+};

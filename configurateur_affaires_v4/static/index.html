@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Configurateur d'affaires - coupe 2D</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="title">Configurateur d'affaires</div>
+      <div class="status" id="status">Chargement…</div>
+    </header>
+
+    <main class="layout">
+      <section class="box affair-box">
+        <legend>Affaire <button class="mini" title="Nouvelle affaire">+</button></legend>
+        <div class="affair-content">
+          <div class="field-row wide">
+            <label>Nom</label>
+            <input id="affaireName" type="text" placeholder="Nom affaire / client" />
+            <button class="folder" title="Ouvrir">▣</button>
+          </div>
+          <div class="brand-block">
+            <div class="mark"></div>
+            <div><strong>ATELIER</strong><br><span>PLIAGE / PROFILAGE</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="box gamme-box">
+        <legend>Gammes</legend>
+        <div class="thumb-grid" id="gammeThumbs"></div>
+        <select id="gammeSelect"></select>
+      </section>
+
+      <section class="box article-box">
+        <legend>Articles</legend>
+        <canvas id="articleSchema" width="420" height="150"></canvas>
+        <select id="articleSelect"></select>
+      </section>
+
+      <section class="box params-box">
+        <legend>Paramètres généraux</legend>
+        <div class="field-row">
+          <label>Matière</label>
+          <select id="materialSelect"></select>
+        </div>
+        <div class="field-row">
+          <label>Épaisseur</label>
+          <select id="thicknessSelect"></select>
+        </div>
+        <div class="field-row">
+          <label>Quantité</label>
+          <input id="quantityInput" type="number" min="1" step="1" value="1" />
+        </div>
+      </section>
+
+      <section class="box details-box">
+        <legend>Détails</legend>
+        <div class="details-panel">
+          <h3 id="detailTitle">—</h3>
+          <p id="detailText">Sélectionne une gamme et un article.</p>
+          <div class="command-list" id="exportLinks"></div>
+        </div>
+      </section>
+
+      <section class="box input-box">
+        <legend>Saisies</legend>
+        <form id="dynamicForm" autocomplete="off"></form>
+      </section>
+
+      <section class="box preview-box">
+        <legend>Vue de coupe / développé</legend>
+        <div class="preview-grid">
+          <div class="preview-card">
+            <div class="preview-title">Vue de coupe 2D cotée</div>
+            <canvas id="previewSection" width="620" height="360"></canvas>
+          </div>
+          <div class="preview-card">
+            <div class="preview-title">Développé à plat</div>
+            <canvas id="previewFlat" width="520" height="230"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="box calc-box">
+        <legend>Champs calculés</legend>
+        <div id="calculatedFields" class="calc-fields"></div>
+      </section>
+    </main>
+
+    <footer class="actionbar">
+      <button id="btnCalculate" class="primary">Recalculer</button>
+      <button id="btnDxf">Générer DXF</button>
+      <button id="btnFiche">Fiche atelier HTML / PDF</button>
+      <button id="btnCopyJson">Copier JSON commande</button>
+      <span class="hint">Les saisies se reconstruisent automatiquement selon l'article sélectionné.</span>
+    </footer>
+  </div>
+  <script src="catalogue_embedded.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
