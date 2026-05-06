@@ -84,8 +84,10 @@ body {
 .article-box { grid-area: article; }
 .params-box { grid-area: params; }
 .details-box { grid-area: details; }
-.input-box { grid-area: inputs; overflow: auto; }
-.preview-box { grid-area: preview; overflow: hidden; }
+.input-box { grid-area: inputs; }
+.input-box > #dynamicForm { overflow: auto; max-height: 100%; }
+.preview-box { grid-area: preview; }
+.preview-box > .preview-grid { overflow: hidden; }
 .calc-box { grid-area: calc; min-height: 64px; }
 
 .mini {
