@@ -650,6 +650,7 @@ async function main() {
   try {
     state.catalogue = await api('/api/catalogue');
     initSelectors();
+    initFolderNavigation();
     await recalc();
   } catch (err) {
     setStatus('Erreur chargement : ' + err.message);
@@ -659,6 +660,84 @@ async function main() {
 main();
 
 let resizeTimer = null;
+
+
+function initFolderNavigation() {
+  const picker = $('folderPicker');
+  const button = $('btnPickFolder');
+  if (!picker || !button) return;
+
+  button.addEventListener('click', () => picker.click());
+  picker.addEventListener('change', () => {
+    renderFolderTree(Array.from(picker.files || []));
+  });
+}
+
+const HIDDEN_FILE_PATTERNS = [/^\./, /^Thumbs\.db$/i, /^desktop\.ini$/i, /^\$/];
+
+function isHidden(name) {
+  return HIDDEN_FILE_PATTERNS.some((re) => re.test(name));
+}
+
+function buildFolderTree(files) {
+  const root = { folders: new Map(), files: [] };
+  files.forEach((file) => {
+    const parts = (file.webkitRelativePath || file.name || '').split('/').filter(Boolean);
+    if (!parts.length || parts.some(isHidden)) return;
+    let node = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const name = parts[i];
+      if (!node.folders.has(name)) {
+        node.folders.set(name, { folders: new Map(), files: [] });
+      }
+      node = node.folders.get(name);
+    }
+    node.files.push(parts[parts.length - 1]);
+  });
+  return root;
+}
+
+function compareFr(a, b) {
+  return a.localeCompare(b, 'fr', { sensitivity: 'base', numeric: true });
+}
+
+function renderTreeNode(node) {
+  const folderNames = Array.from(node.folders.keys()).sort(compareFr);
+  const fileNames = node.files.slice().sort(compareFr);
+  const items = [];
+  folderNames.forEach((name) => {
+    items.push(
+      `<li class="folder-item"><details open><summary>${escapeHtml(name)}</summary>${renderTreeNode(node.folders.get(name))}</details></li>`
+    );
+  });
+  fileNames.forEach((name) => {
+    items.push(`<li class="file-item">${escapeHtml(name)}</li>`);
+  });
+  return `<ul>${items.join('')}</ul>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function renderFolderTree(files) {
+  const folderList = $('folderList');
+  if (!folderList) return;
+  if (!files.length) {
+    folderList.innerHTML = '<li class="muted">Aucun dossier chargé.</li>';
+    return;
+  }
+
+  const tree = buildFolderTree(files);
+  if (!tree.folders.size && !tree.files.length) {
+    folderList.innerHTML = '<li class="muted">Dossier vide ou fichiers masqués.</li>';
+    return;
+  }
+
+  folderList.innerHTML = renderTreeNode(tree).replace(/^<ul>|<\/ul>$/g, '');
+}
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
