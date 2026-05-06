@@ -55,7 +55,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
-        path = parsed.path
+        path = urllib.parse.unquote(parsed.path)
         if path == "/api/catalogue":
             self._send_json(load_catalogue())
             return
