@@ -1,0 +1,21 @@
+{
+  "affaire": "Essai bavette client",
+  "gamme": "bavette",
+  "article": "bv4",
+  "material": "AL15-9010M-ARC",
+  "thickness": 1.5,
+  "quantity": 1,
+  "values": {
+    "rep": "Bv",
+    "A": 10,
+    "B": 30,
+    "C": 150,
+    "D": 30,
+    "E1": 10,
+    "Lg": 3000,
+    "pliA": 60,
+    "pliB": 93,
+    "pliC": 93,
+    "pliD": 165
+  }
+}
