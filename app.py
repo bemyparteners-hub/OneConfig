@@ -14,7 +14,7 @@ from core.dxf_export import create_developed_dxf
 from core.fiche_export import create_fiche_html
 
 ROOT = Path(__file__).parent.resolve()
-STATIC = ROOT / "static"
+STATIC = ROOT
 DATA = ROOT / "data"
 GENERATED = ROOT / "generated"
 CATALOGUE_PATH = DATA / "catalogue.json"
@@ -95,7 +95,7 @@ def run(host: str = "127.0.0.1", port: int = 8000) -> None:
     url = f"http://{host}:{port}"
     print("=" * 60)
     print(f"Configurateur lancé : {url}")
-    print("Ne pas ouvrir static/index.html directement si vous voulez les exports serveur.")
+    print("Ne pas ouvrir index.html directement si vous voulez les exports serveur.")
     print("=" * 60)
     threading.Timer(0.7, lambda: webbrowser.open(url)).start()
     ThreadingHTTPServer((host, port), Handler).serve_forever()
