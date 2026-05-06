@@ -14,22 +14,38 @@ function setStatus(text) {
   $('status').textContent = text;
 }
 
+function isLocalServer() {
+  if (window.location.protocol === 'file:') return false;
+  const h = window.location.hostname;
+  return h === '127.0.0.1' || h === 'localhost' || h === '::1';
+}
+
 async function api(url, payload = null) {
-  // Mode serveur normal : http://127.0.0.1:8000
-  if (window.location.protocol !== 'file:') {
-    const options = payload ? {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    } : {};
-    const res = await fetch(url, options);
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || res.statusText);
-    return data;
+  // Mode serveur Python uniquement en local (127.0.0.1 / localhost / file://).
+  // En hébergement statique (GitHub Pages, etc.) on passe directement
+  // au mode secours côté navigateur.
+  if (isLocalServer()) {
+    try {
+      const options = payload ? {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      } : {};
+      const res = await fetch(url, options);
+      const ct = res.headers.get('content-type') || '';
+      if (!res.ok || !ct.includes('application/json')) {
+        throw new Error(`server ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      return data;
+    } catch (_) {
+      // Bascule en mode secours si le serveur ne répond pas correctement.
+    }
   }
 
-  // Mode secours : si quelqu'un ouvre static/index.html directement en file://
-  // L'interface reste utilisable, avec calculs et exports DXF/fiche faits côté navigateur.
+  // Mode secours : pas de backend Python (file://, GitHub Pages, fetch KO).
+  // L'interface reste utilisable, calculs et exports DXF/fiche côté navigateur.
   if (url === '/api/catalogue') return window.CATALOGUE_EMBEDDED;
   if (url === '/api/calculate') return calculateLocal(window.CATALOGUE_EMBEDDED, payload);
   if (url === '/api/export/dxf') {
