@@ -4,6 +4,7 @@ const state = {
   article: null,
   material: null,
   thickness: null,
+  materialRef: null,
   result: null,
 };
 
@@ -61,6 +62,69 @@ function findMaterial() {
   return state.catalogue.materials.find(m => m.id === state.material) || state.catalogue.materials[0];
 }
 
+// ─────────────────────────────────────────────────────────────
+//  Bridge avec lib/database.js (window.Plialu)
+// ─────────────────────────────────────────────────────────────
+function isAcierFamily(name) { return /acier/i.test(name || ''); }
+
+function enrichCatalogueWithPlialu(cat) {
+  if (!window.Plialu || !Array.isArray(window.Plialu.MATERIALS)) return cat;
+  const P = window.Plialu;
+
+  const byFamily = new Map();
+  P.MATERIALS.forEach(m => {
+    if (!byFamily.has(m.family)) byFamily.set(m.family, { thicknesses: new Set(), items: [] });
+    const f = byFamily.get(m.family);
+    if (typeof m.thickness === 'number') f.thicknesses.add(m.thickness);
+    f.items.push(m);
+  });
+
+  const familyMaterials = Array.from(byFamily.entries()).map(([family, info]) => ({
+    id: `PLIALU::${family}`,
+    label: family,
+    density_kg_m3: isAcierFamily(family) ? 7850 : 2700,
+    k_factor: isAcierFamily(family) ? 0.42 : 0.38,
+    default_radius_factor: 1.0,
+    thicknesses: Array.from(info.thicknesses).sort((a, b) => a - b),
+    plialu_items: info.items,
+    plialu_family: family,
+  }));
+
+  cat.materials = [...familyMaterials, ...(cat.materials || [])];
+  cat.default_material = familyMaterials[0]?.id || cat.default_material;
+  return cat;
+}
+
+function plialuRefsForCurrent() {
+  const m = findMaterial();
+  if (!m || !m.plialu_items) return [];
+  const t = Number(state.thickness);
+  return m.plialu_items
+    .filter(it => Math.abs((it.thickness || 0) - t) < 1e-6)
+    .sort((a, b) => (a.ral || '').localeCompare(b.ral || '', 'fr', { numeric: true }));
+}
+
+function refreshMaterialRefs() {
+  const sel = $('materialRefSelect');
+  if (!sel) return;
+  const refs = plialuRefsForCurrent();
+  if (!refs.length) {
+    sel.innerHTML = '<option value="">— (pas de référence Plialu)</option>';
+    sel.disabled = true;
+    state.materialRef = null;
+    return;
+  }
+  sel.disabled = false;
+  sel.innerHTML = refs.map(r => {
+    const ral = r.ral ? `RAL ${r.ral}` : '';
+    const fin = r.finish || '';
+    const tag = [ral, fin].filter(Boolean).join(' · ');
+    return `<option value="${r.id}">${r.name}${tag ? ' — ' + tag : ''}</option>`;
+  }).join('');
+  state.materialRef = refs[0].id;
+  sel.value = state.materialRef;
+}
+
 function fmt(n, digits = 2) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return '—';
   return Number(n).toLocaleString('fr-FR', { maximumFractionDigits: digits, minimumFractionDigits: digits });
@@ -80,6 +144,7 @@ function initSelectors() {
   renderGammeThumbs();
   refreshArticles();
   refreshThicknesses();
+  refreshMaterialRefs();
 
   $('gammeSelect').addEventListener('change', () => {
     state.gamme = $('gammeSelect').value;
@@ -96,10 +161,16 @@ function initSelectors() {
   $('materialSelect').addEventListener('change', () => {
     state.material = $('materialSelect').value;
     refreshThicknesses();
+    refreshMaterialRefs();
     recalc();
   });
   $('thicknessSelect').addEventListener('change', () => {
     state.thickness = Number($('thicknessSelect').value);
+    refreshMaterialRefs();
+    recalc();
+  });
+  $('materialRefSelect').addEventListener('change', () => {
+    state.materialRef = $('materialRefSelect').value || null;
     recalc();
   });
   $('quantityInput').addEventListener('input', recalc);
@@ -178,6 +249,7 @@ function payload() {
     gamme: state.gamme,
     article: state.article,
     material: state.material,
+    material_ref: state.materialRef,
     thickness: Number($('thicknessSelect').value),
     quantity: Number($('quantityInput').value || 1),
     values: getValues(),
@@ -372,7 +444,8 @@ function drawSectionPreview(r) {
   ctx.fillText(r.article_title || 'Vue de coupe', 20, 29);
   ctx.font = '12px Segoe UI, Arial';
   ctx.fillStyle = '#657285';
-  ctx.fillText(`Matière ${r.material || '—'} · ép. ${fmt(r.thickness_mm)} mm`, 20, 45);
+  const refTxt = r.material_ref ? ` · réf. ${r.material_ref}` : '';
+  ctx.fillText(`Matière ${r.material || '—'} · ép. ${fmt(r.thickness_mm)} mm${refTxt}`, 20, 45);
   ctx.restore();
 
   // Corps de la section : noir épais + centre clair pour évoquer la tôle pliée.
@@ -556,6 +629,7 @@ function calculateLocal(catalogue, p) {
     article_id: p.article,
     gamme_id: p.gamme,
     material: material.label || p.material,
+    material_ref: p.material_ref || null,
     thickness_mm: thickness,
     quantity: qty,
     radius_mm: radius,
@@ -607,7 +681,7 @@ function buildFicheHtml(r, p) {
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Fiche atelier</title>
   <style>body{font-family:Segoe UI,Arial,sans-serif;margin:28px;color:#111}h1{font-size:22px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}table{border-collapse:collapse;width:100%;margin:10px 0}td,th{border:1px solid #ccc;padding:7px;text-align:left}.big{font-size:18px;font-weight:700;background:#f3f7ff}.warn{color:#b00020}</style></head><body>
   <h1>Fiche atelier — ${r.article_title}</h1>
-  <div class="grid"><section><h2>Commande</h2><table><tr><td>Affaire</td><td>${p.affaire || ''}</td></tr><tr><td>Matière</td><td>${r.material}</td></tr><tr><td>Épaisseur</td><td>${r.thickness_mm} mm</td></tr><tr><td>Quantité</td><td>${r.quantity}</td></tr></table></section>
+  <div class="grid"><section><h2>Commande</h2><table><tr><td>Affaire</td><td>${p.affaire || ''}</td></tr><tr><td>Matière</td><td>${r.material}</td></tr>${r.material_ref ? `<tr><td>Réf. matière</td><td>${r.material_ref}</td></tr>` : ''}<tr><td>Épaisseur</td><td>${r.thickness_mm} mm</td></tr><tr><td>Quantité</td><td>${r.quantity}</td></tr></table></section>
   <section><h2>Calculs</h2><table><tr class="big"><td>Développé</td><td>${r.flat_width_mm.toFixed(2)} mm</td></tr><tr><td>Longueur</td><td>${r.length_mm.toFixed(0)} mm</td></tr><tr><td>Poids total</td><td>${r.weight_kg_total.toFixed(3)} kg</td></tr><tr><td>K-factor</td><td>${r.k_factor.toFixed(3)}</td></tr></table></section></div>
   <h2>Saisies</h2><table>${rows}</table><h2>Plis</h2><table><tr><th>Pli</th><th>Angle</th><th>Compensation</th></tr>${bends}</table>
   ${(r.warnings || []).length ? `<h2 class="warn">Alertes</h2><ul>${r.warnings.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}
@@ -649,6 +723,7 @@ async function copyJson() {
 async function main() {
   try {
     state.catalogue = await api('/api/catalogue');
+    enrichCatalogueWithPlialu(state.catalogue);
     initSelectors();
     initFolderNavigation();
     await recalc();
