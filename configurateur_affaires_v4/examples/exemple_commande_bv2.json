@@ -1,0 +1,17 @@
+{
+  "affaire": "Essai bavette 2 plis",
+  "gamme": "bavette",
+  "article": "bv2",
+  "material": "AC75-7032",
+  "thickness": 0.75,
+  "quantity": 1,
+  "values": {
+    "rep": "Bv",
+    "A": 10,
+    "B": 30,
+    "C": 150,
+    "Lg": 3000,
+    "pliA": 45,
+    "pliB": 93
+  }
+}
