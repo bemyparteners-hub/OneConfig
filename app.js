@@ -483,9 +483,12 @@ function normalizePoints(points, width, height, padding = 50) {
   const minY = Math.min(...ys), maxY = Math.max(...ys);
   const spanX = Math.max(1, maxX - minX), spanY = Math.max(1, maxY - minY);
   const scale = Math.min((width - padding * 2) / spanX, (height - padding * 2) / spanY);
+  // Recentre le tracé dans la bbox disponible (axe Y inversé pour le canvas).
+  const offsetX = (width - spanX * scale) / 2;
+  const offsetY = (height - spanY * scale) / 2;
   return points.map(([x, y]) => ({
-    x: padding + (x - minX) * scale,
-    y: height - padding - (y - minY) * scale,
+    x: offsetX + (x - minX) * scale,
+    y: height - offsetY - (y - minY) * scale,
   }));
 }
 
@@ -591,13 +594,21 @@ function drawBendCallout(ctx, pt, label, idx) {
   drawText(ctx, label, pt.x + Math.cos(ang) * (r + 28), pt.y + Math.sin(ang) * (r + 28), color, 12, 'left');
 }
 
+// Rotation purement visuelle des points du profil pour rendu écran.
+// (x, y) → (y, -x) ⇒ rotation -90° (sens horaire). N'altère pas les
+// données métier : buildPreviewPoints, payload, exports DXF/fiche
+// reçoivent toujours les coords d'origine.
+function rotatePointsClockwise90(points) {
+  return points.map(([x, y]) => [y, -x]);
+}
+
 function drawSectionPreview(r) {
   const { ctx, w, h } = prepareCanvas('previewSection', 620, 360);
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = '#fbfcfe';
   ctx.fillRect(0, 0, w, h);
 
-  const rawPoints = r.profile_points || [[0, 0], [100, 0]];
+  const rawPoints = rotatePointsClockwise90(r.profile_points || [[0, 0], [100, 0]]);
   const pts = normalizePoints(rawPoints, w, h, Math.min(86, Math.max(54, w * 0.08)));
 
   // Petit cartouche titre, comme une zone de plan.
@@ -691,7 +702,7 @@ function renderArticleSchema() {
 
   const defaultValues = {};
   article.schema.flatMap(g => g.fields).forEach(f => defaultValues[f.id] = f.default);
-  const points = buildPreviewPoints(article, defaultValues);
+  const points = rotatePointsClockwise90(buildPreviewPoints(article, defaultValues));
   const pts = normalizePoints(points, w, h, 32);
 
   for (let i = 0; i < pts.length - 1; i++) {
