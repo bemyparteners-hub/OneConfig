@@ -595,12 +595,32 @@ function drawBendCallout(ctx, pt, label, idx) {
 }
 
 // Rotation purement visuelle des points du profil pour rendu écran.
-// (x, y) → (-y, x) ⇒ rotation +90° (sens anti-horaire) pour que les
-// retours d'un U/Pi pointent vers le bas comme attendu en coupe atelier.
+// Stratégie : ancrer le segment le plus long à l'horizontale, pour que la
+// pièce ne bascule pas quand un pli change d'angle. Seuls les retours
+// pivotent autour de leurs points de pli respectifs ; le segment principal
+// reste fixe au même endroit à l'écran.
+//   1. Repère le segment [p_i, p_{i+1}] de longueur max.
+//   2. Calcule son angle θ = atan2(dy, dx) par rapport à l'horizontale.
+//   3. Applique la rotation -θ à tous les points → segment principal aligné.
+// Le rendu obtenu pour le cas tout-à-90° est exactement celui de l'ancienne
+// rotation fixe (x,y) → (-y, x).
 // N'altère pas les données métier : buildPreviewPoints, payload, exports
 // DXF/fiche reçoivent toujours les coords d'origine.
 function rotatePointsForScreen(points) {
-  return points.map(([x, y]) => [-y, x]);
+  if (!Array.isArray(points) || points.length < 2) return points;
+  let maxLen = -1, maxIdx = 0;
+  for (let i = 0; i < points.length - 1; i++) {
+    const dx = points[i + 1][0] - points[i][0];
+    const dy = points[i + 1][1] - points[i][1];
+    const len = Math.hypot(dx, dy);
+    if (len > maxLen) { maxLen = len; maxIdx = i; }
+  }
+  const dx = points[maxIdx + 1][0] - points[maxIdx][0];
+  const dy = points[maxIdx + 1][1] - points[maxIdx][1];
+  if (Math.hypot(dx, dy) < 1e-9) return points;
+  const cos = Math.cos(-Math.atan2(dy, dx));
+  const sin = Math.sin(-Math.atan2(dy, dx));
+  return points.map(([x, y]) => [x * cos - y * sin, x * sin + y * cos]);
 }
 
 function drawSectionPreview(r) {
